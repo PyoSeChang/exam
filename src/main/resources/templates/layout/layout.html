@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:title-pattern="$LAYOUT_TITLE - IdeaPlaza">Idea Plaza</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" th:href="@{/css/common.css}" />
+
+    <!-- 개별 페이지에서 넣을 CSS -->
+    <th:block layout:fragment="style"></th:block>
+</head>
+<body>
+
+<header>
+    <div class="container py-3 border-bottom mb-4">
+        <h1 class="text-center"><a th:href="@{/}" class="text-decoration-none text-dark">Idea Plaza</a></h1>
+    </div>
+</header>
+
+<main class="container">
+    <div layout:fragment="content"></div>
+</main>
+
+<footer class="text-center mt-5 py-4 border-top text-muted">
+    &copy; 2025 Idea Plaza. All rights reserved.
+</footer>
+
+<!-- 공통 JS -->
+<script th:src="@{/js/common.js}"></script>
+
+<!-- 개별 페이지 JS -->
+<th:block layout:fragment="script"></th:block>
+
+</body>
+</html>

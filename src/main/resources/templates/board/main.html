@@ -1,0 +1,20 @@
+<!-- templates/board/main.html -->
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>IdeaPlaza - 메인</title>
+</head>
+<body>
+<section layout:fragment="content" class="container mt-5">
+    <h1 class="text-center">생각의 광장 🧠✨</h1>
+    <p class="text-center text-muted">자유롭게 질문하고, 답하고, 함께 성장하세요.</p>
+
+    <div class="d-flex justify-content-center gap-3 mt-4">
+        <a th:href="@{/board/list}" class="btn btn-outline-primary">게시판 가기</a>
+        <a th:href="@{/member/signup}" class="btn btn-outline-success">회원가입</a>
+    </div>
+</section>
+</body>
+</html>
