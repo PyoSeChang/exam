@@ -10,7 +10,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class MemberDTO {
 
-    private final String username;
+    private final String userid;
     private final String password;
     private final String nickname;
     private final Role role; // 기본값은 보통 USER로 설정

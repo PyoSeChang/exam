@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>거주</title>
+  <th:block th:fragment="style">
+    <style>
+      .comment-list {
+        list-style: none;
+        padding-left: 0;
+      }
+      .comment-item {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-top: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .comment-item:hover {
+        background-color: #f9f9f9;
+      }
+      .comment-meta {
+        font-size: 0.85em;
+        color: #888;
+        margin-top: 4px;
+      }
+      .comment-actions {
+        margin-top: 6px;
+      }
+      .comment-actions button {
+        margin-right: 4px;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+      .comment-actions button:hover {
+        text-decoration: underline;
+      }
+      .comment-edit-form {
+        margin-top: 8px;
+        padding: 8px;
+        background: #f0f0f0;
+        border-radius: 6px;
+      }
+      .indent-1 {
+        margin-left: 40px;
+      }
+      .reply-reference {
+        font-size: 0.9em;
+        color: #555;
+        margin-top: 10px;
+        padding: 4px 8px;
+        background-color: #eef;
+        display: none;
+        border-radius: 6px;
+      }
+    </style>
+  </th:block>
+</head>
+
+<body>
+<section th:fragment="content">
+  <hr/>
+  <ul>
+    <li th:each="parent : ${commentList}" th:if="${parent.parentId} == null">
+      <div class="comment-item comment-box indent-0"
+           th:attr="data-id=${parent.id},
+                    data-nickname=${parent.nickname},
+                    data-content=${parent.content},
+                    data-parent-id=${parent.parentId},
+                    data-grandparent-id=${parent.grandParentId},
+                    data-board-id=${board.id}"
+           onclick="setReplyTarget(this)">
+        <div><strong th:text="${parent.nickname}">닉네임</strong></div>
+        <div class="comment-content" th:text="${parent.content}">내용</div>
+        <div class="comment-meta">
+          <span th:text="${#temporals.format(parent.modifiedDate, 'yyyy-MM-dd HH:mm')}">작성일</span>
+          <span th:if="${parent.modifiedDate != null and parent.modifiedDate != parent.createdDate}">(수정됨)</span>
+        </div>
+        <div class="comment-actions">
+          <div th:if="${loginNickname != parent.nickname}">
+           <form th:action="@{/board/reactComment}" method="post">
+              <input type="hidden" name="commentId" th:value="${parent.id}" />
+              <input type="hidden" name="reactType" value="like" /> <!-- 'like' ReactType -->
+              <button type="submit" class="btn btn-like">👍</button>
+              <span th:text="${parent.likes}">0</span> <!-- 좋아요 수 출력 -->
+          </form>
+
+          <form th:action="@{/board/reactComment}" method="post">
+              <input type="hidden" name="commentId" th:value="${parent.id}" />
+              <input type="hidden" name="reactType" value="dislike" /> <!-- 'dislike' ReactType -->
+              <button type="submit" class="btn btn-dislike">👎</button>
+              <span th:text="${parent.dislikes}">0</span> <!-- 싫어요 수 출력 -->
+          </form>
+          </div>
+          <span th:if="${loginNickname == parent.nickname}">
+            <button type="button" onclick="event.stopPropagation(); toggleEditForm(this)">수정</button>
+            <button type="button" onclick="event.stopPropagation(); deleteComment(this)">삭제</button>
+          </span>
+        </div>
+      </div>
+
+      <!-- 대댓글 -->
+      <ul>
+        <li th:each="child : ${commentList}" th:if="${child.parentId == parent.id and child.grandParentId == null}">
+          <div class="comment-item comment-box indent-1"
+               th:attr="data-id=${child.id},
+                        data-nickname=${child.nickname},
+                        data-content=${child.content},
+                        data-parent-id=${child.parentId},
+                        data-grandparent-id=${child.grandParentId},
+                        data-board-id=${board.id}"
+               onclick="setReplyTarget(this)">
+            <div><strong th:text="${child.nickname}">닉네임</strong></div>
+            <div th:if="${child.referencedNickname != null}">
+              <span class="reference"
+                    th:if="${child.referencedNickname != null}"
+                    th:text="|↪️ @${child.referencedNickname} &quot;${child.referencedContent}&quot;|">
+              </span>
+            </div>
+            <div class="comment-content" th:text="${child.content}">내용</div>
+            <div class="comment-meta">
+              <span th:text="${#temporals.format(child.modifiedDate, 'yyyy-MM-dd HH:mm')}">작성일</span>
+              <span th:if="${child.modifiedDate != null and child.modifiedDate != child.createdDate}">(수정됨)</span>
+            </div>
+            <div class="comment-actions">
+              <div th:if="${loginNickname != child.nickname}">
+                <form th:action="@{/board/reactComment}" method="post">
+                    <input type="hidden" name="commentId" th:value="${child.id}" />
+                    <input type="hidden" name="reactType" value="like" /> <!-- 'like' ReactType -->
+                    <button type="submit" class="btn btn-like">👍</button>
+                    <span th:text="${child.likes}">0</span> <!-- 좋아요 수 출력 -->
+                </form>
+
+                <form th:action="@{/board/reactComment}" method="post">
+                    <input type="hidden" name="commentId" th:value="${child.id}" />
+                    <input type="hidden" name="reactType" value="dislike" /> <!-- 'dislike' ReactType -->
+                    <button type="submit" class="btn btn-dislike">👎</button>
+                    <span th:text="${child.dislikes}">0</span> <!-- 싫어요 수 출력 -->
+                </form>
+              </div>
+              <span th:if="${loginNickname == child.nickname}">
+                <button type="button" onclick="event.stopPropagation(); toggleEditForm(this)">수정</button>
+                <button type="button" onclick="event.stopPropagation(); deleteComment(this)">삭제</button>
+              </span>
+            </div>
+          </div>
+
+          <!-- 대댓글의 대댓글 -->
+          <ul>
+            <li th:each="grandchild : ${commentList}" th:if="${grandchild.parentId == child.id and grandchild.grandParentId != null}">
+              <div class="comment-item comment-box indent-1"
+                   th:attr="data-id=${grandchild.id},
+                            data-nickname=${grandchild.nickname},
+                            data-content=${grandchild.content},
+                            data-parent-id=${grandchild.parentId},
+                            data-grandparent-id=${grandchild.grandParentId},
+                            data-board-id=${board.id}"
+                   onclick="setReplyTarget(this)">
+                <div><strong th:text="${grandchild.nickname}">닉네임</strong></div>
+                <div th:if="${grandchild.referencedNickname != null}">
+                  <span class="reference"
+                        th:if="${grandchild.referencedNickname != null}"
+                        th:text="|↪️ @${grandchild.referencedNickname} &quot;${grandchild.referencedContent}&quot;|">
+                  </span>
+                </div>
+                <div class="comment-content" th:text="${grandchild.content}">내용</div>
+                <div class="comment-meta">
+                  <span th:text="${#temporals.format(grandchild.modifiedDate, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                  <span th:if="${grandchild.modifiedDate != null and grandchild.modifiedDate != grandchild.createdDate}">(수정됨)</span>
+                </div>
+                <div class="comment-actions">
+                  <div th:if="${loginNickname != grandchild.nickname}">
+                    <form th:action="@{/board/reactComment}" method="post">
+                      <input type="hidden" name="commentId" th:value="${grandchild.id}" />
+                      <input type="hidden" name="reactType" value="like" /> <!-- 'like' ReactType -->
+                      <button type="submit" class="btn btn-like">👍</button>
+                      <span th:text="${grandchild.likes}">0</span> <!-- 좋아요 수 출력 -->
+                    </form>
+                    <form th:action="@{/board/reactComment}" method="post">
+                        <input type="hidden" name="commentId" th:value="${grandchild.id}" />
+                        <input type="hidden" name="reactType" value="dislike" /> <!-- 'dislike' ReactType -->
+                        <button type="submit" class="btn btn-dislike">👎</button>
+                        <span th:text="${grandchild.dislikes}">0</span> <!-- 싫어요 수 출력 -->
+                    </form>
+                  </div>
+                  <span th:if="${loginNickname == grandchild.nickname}">
+                    <button type="button" onclick="event.stopPropagation(); toggleEditForm(this)">수정</button>
+                    <button type="button" onclick="event.stopPropagation(); deleteComment(this)">삭제</button>
+                  </span>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="comment-edit-form" style="display: none;">
+    <form th:action="@{/board/updateComment}" method="post">
+      <input type="hidden" name="id"/>
+      <input type="hidden" name="nickname"/>
+      <input type="hidden" name="boardId" th:value="${board.id}" />
+      <textarea name="content" rows="3" style="width: 100%;"></textarea>
+      <div style="margin-top: 4px;">
+        <button type="submit">수정 완료</button>
+        <button type="button" onclick="cancelEditForm(this)">취소</button>
+      </div>
+    </form>
+  </div>
+
+  <form th:action="@{/board/insertComment}" method="post" style="margin-top: 16px;">
+    <input type="hidden" name="boardId" th:value="${board.id}" />
+    <input type="hidden" id="parentId" name="parentId"/>
+    <input type="hidden" id="grandParentId" name="grandParentId"/>
+    <div id="replyReference" class="reply-reference"></div>
+    <textarea name="content" rows="4" style="width: 100%;" placeholder="댓글을 입력하세요..."></textarea>
+    <div style="margin-top: 4px;">
+      <button type="submit">댓글 등록</button>
+    </div>
+  </form>
+</section>
+
+<th:block th:fragment="js">
+  <script>
+    function likeComment(id, type) {
+      fetch(`/board/${type}/like/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, type })
+      })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  alert('좋아요!');
+                  location.reload();  // 성공 후 새로고침
+                }
+              })
+              .catch(error => console.error('Error:', error));
+    }
+
+    function dislikeComment(id, type) {
+      fetch(`/board/${type}/dislike/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, type })
+      })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  alert('싫어요!');
+                  location.reload();  // 성공 후 새로고침
+                }
+              })
+              .catch(error => console.error('Error:', error));
+    }
+    function toggleEditForm(btn) {
+      const commentBox = btn.closest('.comment-box');
+      let form = commentBox.querySelector('.comment-edit-form');
+      if (!form) {
+        form = document.querySelector('.comment-edit-form').cloneNode(true);
+        form.style.display = 'block';
+        form.querySelector('input[name="id"]').value = commentBox.getAttribute('data-id');
+        form.querySelector('input[name="nickname"]').value = commentBox.getAttribute('data-nickname');
+        form.querySelector('input[name="boardId"]').value = commentBox.getAttribute('data-board-id');
+
+        const contentEl = commentBox.querySelector('.comment-content');
+        form.querySelector('textarea').value = contentEl ? contentEl.textContent : '';
+
+        form.querySelector('textarea').addEventListener('click', e => e.stopPropagation());
+        commentBox.appendChild(form);
+      } else {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+
+    function cancelEditForm(btn) {
+      btn.closest('.comment-edit-form').remove();
+    }
+
+    function setReplyTarget(elem) {
+      const id = elem.getAttribute('data-id');
+      const nickname = elem.getAttribute('data-nickname');
+      const content = elem.getAttribute('data-content');
+      const parentIdAttr = elem.getAttribute('data-parent-id');
+      const grandParentIdAttr = elem.getAttribute('data-grandparent-id');
+
+      document.getElementById("parentId").value = id;
+
+      let grandParentId = "";
+      if (parentIdAttr && grandParentIdAttr) {
+        grandParentId = grandParentIdAttr;
+      } else if (parentIdAttr) {
+        grandParentId = parentIdAttr;
+      }
+
+      document.getElementById("grandParentId").value = grandParentId;
+
+      const ref = document.getElementById("replyReference");
+      ref.innerText = `↪️ @${nickname} "${content}"`;
+      ref.style.display = "block";
+
+      const textarea = document.querySelector('form[action*="insertComment"] textarea[name="content"]');
+      if (textarea) {
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+      }
+    }
+
+    function deleteComment(btn) {
+      const commentBox = btn.closest('.comment-item');
+      const commentId = commentBox.getAttribute('data-id');
+      const nickname = commentBox.getAttribute('data-nickname');
+
+      if (confirm("정말 이 댓글을 삭제하시겠습니까?")) {
+        fetch('/board/deleteComment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `id=${commentId}&nickname=${encodeURIComponent(nickname)}`
+        })
+                .then(response => {
+                  if (response.ok) location.reload();
+                  else alert("삭제에 실패했습니다.");
+                })
+                .catch(error => {
+                  console.error("삭제 오류:", error);
+                  alert("오류가 발생했습니다.");
+                });
+      }
+    }
+  </script>
+</th:block>
+</body>
+</html>

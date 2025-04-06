@@ -1,5 +1,6 @@
 package com.psc.demo.domain.board;
 
+import com.psc.demo.domain.member.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,12 +17,10 @@ public class Board {
     private Long id;  // 게시글 ID (PK)
 
     @Column(nullable = false)
-    private String subject;  // 게시글 제목
+    private String title;  // 게시글 제목
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;  // 게시글 내용
-
-    private String tags;  // 게시글 태그 (콤마로 구분)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -29,6 +28,10 @@ public class Board {
 
     @Column(nullable = false)
     private String userid;  // 게시글 작성자 (사용자 ID)
+
+    @ManyToOne
+    @JoinColumn(name = "member_id")
+    private Member member;
 
     @OneToOne(mappedBy = "board", cascade = CascadeType.ALL)
     private BoardMeta boardMeta;  // 게시글 메타 정보 (작성일, 조회수 등)

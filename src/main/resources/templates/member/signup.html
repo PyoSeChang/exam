@@ -5,25 +5,74 @@
       xmlns:layout="http://www.w3.org/1999/xhtml"
       layout:decorate="~{layout/layout}">
 <head>
-
     <title>회원가입</title>
+    <style>
+        .validation-message {
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+
+        .validation-success {
+            color: green;
+        }
+
+        .validation-error {
+            color: red;
+        }
+    </style>
 </head>
 <body>
-<section layout:fragment="content" class="container mt-5" style="max-width: 500px;">
+<section layout:fragment="content" class="container mt-5" style="max-width: 600px;">
     <h2 class="mb-4 text-center">회원가입</h2>
-    <form th:action="@{/member/signup}" method="post">
+    <form th:action="@{/member/signup}" method="post" id="signupForm">
+        <!-- Member 정보 -->
         <div class="mb-3">
-            <label for="username" class="form-label">아이디</label>
-            <input type="text" class="form-control" id="username" name="username" required />
+            <label for="userid" class="form-label">아이디</label>
+            <input type="text" class="form-control" id="userid" name="userid" required />
+            <div id="userid-msg" class="validation-message"></div>
         </div>
         <div class="mb-3">
             <label for="password" class="form-label">비밀번호</label>
             <input type="password" class="form-control" id="password" name="password" required />
         </div>
         <div class="mb-3">
+            <label for="confirmPassword" class="form-label">비밀번호 확인</label>
+            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required />
+            <div id="password-msg" class="validation-message"></div>
+        </div>
+        <div class="mb-3">
             <label for="nickname" class="form-label">닉네임</label>
             <input type="text" class="form-control" id="nickname" name="nickname" required />
+            <div id="nickname-msg" class="validation-message"></div>
         </div>
+
+        <!-- UserInfo 정보 -->
+        <div class="mb-3">
+            <label for="name" class="form-label">이름</label>
+            <input type="text" class="form-control" id="name" name="name" required />
+        </div>
+        <div class="mb-3">
+            <label for="gender" class="form-label">성별</label>
+            <select class="form-control" id="gender" name="gender" required>
+                <option value="">선택</option>
+                <option value="M">남자</option>
+                <option value="F">여자</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="birthDate" class="form-label">생년월일</label>
+            <input type="date" class="form-control" id="birthDate" name="birthDate" required />
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">이메일</label>
+            <input type="email" class="form-control" id="email" name="email" required />
+            <div id="email-msg" class="validation-message"></div>
+        </div>
+        <div class="mb-3">
+            <label for="tel" class="form-label">전화번호(- 생략)</label>
+            <input type="text" class="form-control" id="tel" name="tel" required />
+        </div>
+
         <div class="d-grid">
             <button type="submit" class="btn btn-success">가입하기</button>
         </div>
@@ -32,5 +81,62 @@
         <a th:href="@{/member/login}">로그인 화면으로</a>
     </div>
 </section>
+
+<th:block layout:fragment="script">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 아이디 중복 체크
+            document.getElementById("userid").addEventListener("blur", () => {
+                const userId = document.getElementById("userid").value;
+                fetch(`/member/checkUserId?userid=${userId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const msg = document.getElementById("userid-msg");
+                        msg.textContent = data.exists ? "이미 사용 중인 아이디입니다." : "사용 가능한 아이디입니다.";
+                        msg.className = "validation-message " + (data.exists ? "validation-error" : "validation-success");
+                    });
+            });
+
+            // 닉네임 중복 체크
+            document.getElementById("nickname").addEventListener("blur", () => {
+                const nickname = document.getElementById("nickname").value;
+                fetch(`/member/checkNickname?nickname=${nickname}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const msg = document.getElementById("nickname-msg");
+                        msg.textContent = data.exists ? "이미 사용 중인 닉네임입니다." : "사용 가능한 닉네임입니다.";
+                        msg.className = "validation-message " + (data.exists ? "validation-error" : "validation-success");
+                    });
+            });
+
+            // 이메일 중복 체크
+            document.getElementById("email").addEventListener("blur", () => {
+                const email = document.getElementById("email").value;
+                fetch(`/member/checkEmail?email=${email}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        const msg = document.getElementById("email-msg");
+                        msg.textContent = data.exists ? "이미 등록된 이메일입니다." : "사용 가능한 이메일입니다.";
+                        msg.className = "validation-message " + (data.exists ? "validation-error" : "validation-success");
+                    });
+            });
+
+            // 비밀번호 일치 여부
+            document.getElementById("confirmPassword").addEventListener("input", () => {
+                const pw1 = document.getElementById("password").value;
+                const pw2 = document.getElementById("confirmPassword").value;
+                const msg = document.getElementById("password-msg");
+                console.log("비교 중:", pw1, pw2);
+                if (pw1 !== pw2) {
+                    msg.textContent = "비밀번호가 일치하지 않습니다.";
+                    msg.className = "validation-message validation-error";
+                } else {
+                    msg.textContent = "비밀번호가 일치합니다.";
+                    msg.className = "validation-message validation-success";
+                }
+            });
+        });
+    </script>
+</th:block>
 </body>
 </html>

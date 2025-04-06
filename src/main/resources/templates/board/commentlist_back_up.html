@@ -1,0 +1,67 @@
+<ul>
+    <!-- 원댓글 -->
+    <li th:each="parent : ${commentList}" th:if="${parent.parentId} == null">
+        <div class="comment-box indent-0"
+             th:attr="data-id=${comment.id},
+              data-nickname=${comment.nickname},
+              data-content=${comment.content},
+              data-parent-id=${comment.parentId},
+              data-grandparent-id=${comment.grandParentId}"
+             onclick="setReplyTarget(this)">
+            <div><strong th:text="${parent.nickname}">닉네임</strong></div>
+            <div th:text="${parent.content}">내용</div>
+            <div class="comment-meta">
+                <span th:text="${#temporals.format(parent.modifiedDate, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                <span th:if="${parent.modifiedDate != null}">(수정됨)</span>
+            </div>
+            <div class="comment-actions">
+        <span th:if="${loginNickname != parent.nickname}">
+          <button type="button">👍</button><span th:text="${parent.likes}"></span>
+          <button type="button">👎</button><span th:text="${parent.dislikes}"></span>
+        </span>
+                <span th:if="${loginNickname == parent.nickname}">
+          <button type="button" onclick="event.stopPropagation(); toggleEditForm(this)">수정</button>
+          <button type="button">삭제</button>
+        </span>
+            </div>
+        </div>
+
+        <!-- 대댓글들 (해당 원댓글 기준으로 parentId or grandParentId가 연결된 댓글들) -->
+        <ul>
+            <li th:each="child : ${commentList}"
+                th:if="${child.parentId == parent.id} or ${child.grandParentId == parent.id}">
+                <div class="comment-box indent-1"
+                     th:attr="data-id=${comment.id},
+              data-nickname=${comment.nickname},
+              data-content=${comment.content},
+              data-parent-id=${comment.parentId},
+              data-grandparent-id=${comment.grandParentId}"
+                     onclick="setReplyTarget(this)">
+                    <div><strong th:text="${child.nickname}">닉네임</strong></div>
+
+                    <!-- 참조 정보 표시 (referencedNickname, referencedContent) -->
+                    <div th:if="${child.referencedNickname != null}">
+                        <span class="reference" th:text="'↪️ @' + ${child.referencedNickname} + ' &quot;' + ${child.referencedContent} + '&quot;'"></span>
+                    </div>
+
+                    <div th:text="${child.content}">내용</div>
+                    <div class="comment-meta">
+                        <span th:text="${#temporals.format(child.modifiedDate, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                        <span th:if="${child.modifiedDate != null}">(수정됨)</span>
+                    </div>
+                    <div class="comment-actions">
+            <span th:if="${loginNickname != child.nickname}">
+              <button type="button">👍</button><span th:text="${child.likes}"></span>
+              <button type="button">👎</button><span th:text="${child.dislikes}"></span>
+            </span>
+                        <span th:if="${loginNickname == child.nickname}">
+              <button type="button" onclick="event.stopPropagation(); toggleEditForm(this)">수정</button>
+              <button type="button">삭제</button>
+            </span>
+                    </div>
+                </div>
+            </li>
+        </ul>
+
+    </li>
+</ul>

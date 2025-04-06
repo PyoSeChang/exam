@@ -1,0 +1,49 @@
+<!-- templates/member/mypage.html -->
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.w3.org/1999/xhtml"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>마이페이지</title>
+</head>
+<body>
+<section layout:fragment="content" class="container mt-5" style="max-width: 600px;">
+    <h2 class="mb-4 text-center">마이페이지</h2>
+
+    <form th:action="@{/member/editUserInfo}" method="post">
+        <div class="mb-3">
+            <label for="name" class="form-label">이름</label>
+            <input type="text" class="form-control" id="name" name="name" th:value="${userInfoDTO.name}" required readonly/>
+        </div>
+
+        <div class="mb-3">
+            <label for="gender" class="form-label">성별</label>
+            <select class="form-control" id="gender" name="gender" required>
+                <option value="M" th:selected="${userInfoDTO.gender == 'M'}">남자</option>
+                <option value="F" th:selected="${userInfoDTO.gender == 'F'}">여자</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="birthDate" class="form-label">생년월일</label>
+            <input type="date" class="form-control" id="birthDate" name="birthDate" th:value="${userInfoDTO.birthDate}" required />
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">이메일</label>
+            <input type="email" class="form-control" id="email" name="email" th:value="${userInfoDTO.email}" required />
+        </div>
+
+        <div class="mb-3">
+            <label for="tel" class="form-label">전화번호</label>
+            <input type="text" class="form-control" id="tel" name="tel" th:value="${userInfoDTO.tel}" required />
+        </div>
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary">저장하기</button>
+        </div>
+    </form>
+</section>
+</body>
+</html>

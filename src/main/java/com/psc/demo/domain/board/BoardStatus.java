@@ -16,7 +16,8 @@ public class BoardStatus {
     private Long id;  // 상태 ID (PK)
 
     @OneToOne
-    @JoinColumn(name = "board_id", referencedColumnName = "id")
+    @MapsId
+    @JoinColumn(name = "id", referencedColumnName = "id")
     private Board board;  // 게시글 정보와 연결
 
     private boolean active;  // 게시글 활성화 여부

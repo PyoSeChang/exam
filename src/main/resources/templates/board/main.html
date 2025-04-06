@@ -1,7 +1,7 @@
 <!-- templates/board/main.html -->
 <html lang="ko"
       xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.w3.org/1999/xhtml"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/layout}">
 <head>
     <title>IdeaPlaza - 메인</title>
@@ -13,6 +13,8 @@
 
     <div class="d-flex justify-content-center gap-3 mt-4">
         <a th:href="@{/board/list}" class="btn btn-outline-primary">게시판 가기</a>
+        <a th:href="@{/board/insert}" class="btn btn-outline-primary">게시글 작성</a>
+        <a th:href="@{/member/editUserInfo}" class="btn btn-outline-success">회원정보 수정</a>
         <a th:href="@{/member/signup}" class="btn btn-outline-success">회원가입</a>
     </div>
 </section>

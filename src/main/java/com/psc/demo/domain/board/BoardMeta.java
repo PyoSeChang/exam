@@ -18,7 +18,8 @@ public class BoardMeta {
     private Long id;  // 메타 ID (PK)
 
     @OneToOne
-    @JoinColumn(name = "board_id", referencedColumnName = "id")
+    @MapsId
+    @JoinColumn(name = "id", referencedColumnName = "id")
     private Board board;  // 게시글 정보와 연결
 
     private LocalDateTime regDate;  // 작성일

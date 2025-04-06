@@ -7,7 +7,7 @@
     <title layout:title-pattern="$LAYOUT_TITLE - IdeaPlaza">Idea Plaza</title>
 
     <!-- 공통 CSS -->
-    <link rel="stylesheet" th:href="@{/css/common.css}" />
+    <!--    <link rel="stylesheet" th:href="@{/css/common.css}" />-->
 
     <!-- 개별 페이지에서 넣을 CSS -->
     <th:block layout:fragment="style"></th:block>
@@ -16,7 +16,39 @@
 
 <header>
     <div class="container py-3 border-bottom mb-4">
-        <h1 class="text-center"><a th:href="@{/}" class="text-decoration-none text-dark">Idea Plaza</a></h1>
+        <h1 class="text-center"><a th:href="@{/board/main}" class="text-decoration-none text-dark">Idea Plaza</a></h1>
+
+        <!-- 네비게이션 바 -->
+        <nav>
+            <ul class="nav justify-content-center">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/board/main}">홈</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/board/list}">게시판</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/about}">소개</a>
+                </li>
+                <!-- 로그인 상태에 따른 네비게이션 표시 -->
+                <li class="nav-item" th:if="${session.loginMember == null}">
+                    <a class="nav-link" th:href="@{/member/login}">로그인</a>
+                </li>
+                <li class="nav-item" th:if="${session.loginMember != null}">
+                    <form action="/member/logout" method="POST" style="display: inline;">
+                        <button type="submit" class="nav-link" style="background: none; border: none; padding: 0; text-decoration: underline; cursor: pointer;">
+                            로그아웃
+                        </button>
+                    </form>
+
+                </li>
+                <li class="nav-item" th:if="${session.loginMember != null}">
+                    <span class="nav-link">
+                        <span th:text="${session.loginMember.nickname} + '님'">로그인된 사용자</span>
+                    </span>
+                </li>
+            </ul>
+        </nav>
     </div>
 </header>
 
@@ -29,7 +61,7 @@
 </footer>
 
 <!-- 공통 JS -->
-<script th:src="@{/js/common.js}"></script>
+<!--<script th:src="@{/js/common.js}"></script>-->
 
 <!-- 개별 페이지 JS -->
 <th:block layout:fragment="script"></th:block>

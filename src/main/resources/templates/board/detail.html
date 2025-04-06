@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+
+<head>
+  <title>게시글 상세 보기</title>
+
+
+</head>
+
+<body>
+<main layout:fragment="content" class="container">
+
+  <h1 th:text="${board.title}">게시글 제목</h1>
+
+  <h2 th:if="${loginNickname != ''}" th:text="'로그인 닉네임: ' + ${loginNickname}"></h2>
+  <h2 th:if="${loginNickname == ''}">로그인된 닉네임 없음</h2>
+  <div class="meta-info">
+    <span>카테고리: <b th:text="${board.category}">카테고리</b></span> |
+    <span>작성자: <b th:text="${board.nickname}">작성자</b></span> |
+    <span>작성일: <b th:text="${#temporals.format(board.regDate, 'yyyy-MM-dd HH:mm')}">작성일</b></span> |
+    <span>수정일: <b th:text="${#temporals.format(board.updatedDate, 'yyyy-MM-dd HH:mm')}">수정일</b></span>
+  </div>
+
+  <hr>
+
+  <div class="content" th:utext="${board.content}">
+    게시글 내용
+  </div>
+
+
+  <hr>
+
+  <div class="status-info">
+    <span>조회수: <b th:text="${board.viewCount}">0</b></span> |
+    <span>댓글 수: <b th:text="${board.commentCount}">0</b></span> |
+
+    <!-- 좋아요 이모지 버튼 -->
+      <form th:action="@{/board/reactBoard}" method="post" style="display: inline;">
+          <input type="hidden" name="boardId" th:value="${board.id}" />
+          <input type="hidden" name="reactType" value="like" />
+
+          <span>
+        좋아요:
+        <button type="submit" class="btn btn-link">
+            <span role="img" aria-label="like">👍</span>
+        </button>
+        <b id="likeCount" th:text="${board.likeCount}">0</b>
+    </span>
+      </form>
+
+      <span> | </span>
+
+      <form th:action="@{/board/reactBoard}" method="post" style="display: inline;">
+          <input type="hidden" name="boardId" th:value="${board.id}" />
+          <input type="hidden" name="reactType" value="dislike" />
+
+          <span>
+        싫어요:
+        <button type="submit" class="btn btn-link">
+            <span role="img" aria-label="dislike">👎</span>
+        </button>
+        <b id="dislikeCount" th:text="${board.dislikeCount}">0</b>
+    </span>
+      </form>
+
+  </div>
+
+
+
+  <hr>
+
+  <div class="tags">
+    <span>태그: <b th:text="${board.tags}">#태그</b></span>
+  </div>
+
+  <a th:href="@{/board/update(id=${board.id})}">수정하기</a>
+
+  <!-- 💬 댓글 content 삽입 -->
+  <div th:replace="~{board/comment :: content}"></div>
+
+  <!-- 💻 댓글용 JS 포함 -->
+  <th:block th:replace="~{board/comment :: js}"></th:block>
+
+  <!-- 🎨 댓글용 CSS 포함 -->
+  <th:block th:replace="~{board/comment :: style}" th:defer=""></th:block>
+
+</main>
+
+</body>
+</html>

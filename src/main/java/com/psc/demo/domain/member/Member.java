@@ -17,7 +17,7 @@ public class Member {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String username;  // 로그인 ID
+    private String userid;  // 로그인 ID
 
     @Column(nullable = false)
     private String password;
@@ -37,8 +37,8 @@ public class Member {
     }
 
     @Builder
-    public Member(String username, String password, String nickname, Role role) {
-        this.username = username;
+    public Member(String userid, String password, String nickname, Role role) {
+        this.userid = userid;
         this.password = password;
         this.nickname = nickname;
         this.role = (role == null) ? Role.USER : role; // 기본값을 여기에 설정

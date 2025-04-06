@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>게시글 수정</title>
+</head>
+
+<body>
+<section layout:fragment="content">
+    <h2>게시글 수정</h2>
+
+    <form th:action="@{/board/update}" th:object="${board}" method="post">
+        <!-- 수정 대상 ID는 hidden으로 -->
+        <input type="hidden" th:field="*{id}" />
+
+        <div>
+            <label for="title">제목</label>
+            <input type="text" id="title" th:field="*{title}" required />
+        </div>
+
+        <div>
+            <label for="content">내용</label>
+            <textarea id="content" th:field="*{content}" rows="10" required></textarea>
+        </div>
+
+        <div>
+            <button type="submit">수정 완료</button>
+            <a th:href="@{/board/list}">취소</a>
+            <a th:href="@{/board/delete(id=${board.id})}"
+               onclick="return confirm('정말 삭제하시겠습니까?');">삭제</a>
+        </div>
+    </form>
+</section>
+</body>
+</html>
