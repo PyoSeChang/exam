@@ -9,6 +9,7 @@ import com.psc.demo.dto.member.UserInfoDTO;
 import com.psc.demo.repository.member.MemberRepository;
 import com.psc.demo.repository.member.UserInfoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,18 +19,24 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
     private final UserInfoRepository userInfoRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     @Override
     public void registerMember(MemberDTO mDTO, UserInfoDTO uDTO) {
+        // 1. MemberDTO → Member 변환
         Member member = toEntity(mDTO);
+        // 2. 비밀번호 암호화
+        member.setPassword(passwordEncoder.encode(mDTO.getPassword()));
+
+        // 3. 저장
         memberRepository.save(member);
+
+        // 4. UserInfo 처리
         UserInfo userInfo = uDTO.toEntity();
         userInfo.setMember(member);
         userInfoRepository.save(userInfo);
-
     }
-
     @Override
     public void withdrawMember(long memberId) {
         memberRepository.deleteById(memberId);

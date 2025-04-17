@@ -5,6 +5,7 @@ import com.psc.demo.domain.member.Member;
 import com.psc.demo.dto.board.*;
 import com.psc.demo.dto.member.MemberDTO;
 import com.psc.demo.repository.board.CommentRepository;
+import com.psc.demo.security.model.CustomUserDetails;
 import com.psc.demo.service.board.BoardService;
 import com.psc.demo.service.board.BoardServiceImpl;
 import jakarta.servlet.http.HttpSession;
@@ -13,12 +14,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
 import java.util.HashMap;
@@ -74,15 +73,22 @@ public class BoardController {
     }
 
 
-    @GetMapping("detail")
-    public String displayBoardDetail(Model model, @RequestParam(name="id") Long id, HttpSession session) {
-        boardService.incrementViewCount(id, session);
+    @GetMapping("/detail/{id}")
+    public String displayBoardDetail(
+            @PathVariable("id") Long id,
+            Model model,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        boardService.incrementViewCount(id, userDetails); // userDetails에서 id 사용 가능
+
         model.addAttribute("board", boardService.getBoardById(id));
+
         List<CommentDTO> comments = boardService.getCommentsByBoardId(id);
         model.addAttribute("commentList", comments);
         model.addAttribute("commentDTO", new CommentDTO());
-        Member member = (Member) session.getAttribute("loginMember");
-        model.addAttribute("loginNickname", member != null ? member.getNickname() : "");
+
+        String nickname = userDetails != null ? userDetails.getNickname() : "";
+        model.addAttribute("loginNickname", nickname);
 
         return "board/detail";
     }

@@ -8,11 +8,17 @@ import com.psc.demo.dto.member.MemberDTO;
 import com.psc.demo.dto.member.UserInfoDTO;
 import com.psc.demo.repository.member.MemberRepository;
 import com.psc.demo.repository.member.UserInfoRepository;
+import com.psc.demo.security.model.CustomUserDetails;
 import com.psc.demo.service.member.MemberServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +36,7 @@ public class MemberController {
     private final MemberServiceImpl memberService;
     private final MemberRepository memberRepository;
     private final UserInfoRepository userInfoRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping("signup")
     public String displaySignup() {
@@ -72,42 +79,47 @@ public class MemberController {
     }
 
     @PostMapping("login")
-    public String processLogin(@ModelAttribute("loginRequest") LoginRequestDTO loginRequest, Model model, HttpSession session,
-                               HttpServletRequest request) {
-        LoginResult loginResult= memberService.login(loginRequest);
-        switch (loginResult) {
-            case SUCCESS_USER:
-                // 일반 사용자 로그인 성공
-                if (session != null) {
-                    session.invalidate();  // 이전 세션 무효화
-                }
-                session = request.getSession(true);
-                session.setAttribute("loginMember", memberService.findByUserid(loginRequest.getUserid()));
-                System.out.println("로그인 세션: "+session.getAttribute("loginMember"));
-                return "redirect:/board/main";
+    public String processLogin(@ModelAttribute("loginRequest") LoginRequestDTO loginRequest,
+                               HttpServletRequest request,
+                               Model model) {
+        // 1. 사용자 조회 (DB)
+        Member member = memberRepository.findByUserid(loginRequest.getUserid())
+                .orElse(null);
 
-            case SUCCESS_ADMIN:
-                // 관리자 로그인 성공
-                if (session != null) {
-                    session.invalidate();  // 이전 세션 무효화
-                }
-                session = request.getSession(true);
-                session.setAttribute("loginMember", memberService.findByUserid(loginRequest.getUserid()));
-                return "redirect:/board/main";
-
-            case FAIL_ID_NOT_FOUND:
-                model.addAttribute("error", "존재하지 않는 아이디입니다.");
-                return "member/login";
-
-            case FAIL_PASSWORD_INCORRECT:
-                model.addAttribute("error", "비밀번호가 틀렸습니다.");
-                return "member/login";
-
-            default:
-                model.addAttribute("error", "알 수 없는 오류가 발생했습니다.");
-                return "member/login";
+        if (member == null) {
+            model.addAttribute("error", "존재하지 않는 아이디입니다.");
+            return "member/login";
         }
+
+        // 2. 비밀번호 비교 (BCrypt 해시)
+        if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
+            model.addAttribute("error", "비밀번호가 틀렸습니다.");
+            return "member/login";
+        }
+
+        // 3. CustomUserDetails 생성
+        CustomUserDetails userDetails = new CustomUserDetails(member);
+
+        // 4. Authentication 객체 생성
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                userDetails,                     // principal
+                null,                            // credentials
+                userDetails.getAuthorities()     // 권한 목록
+        );
+
+        // 5. SecurityContext 생성 + 등록
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
+
+        // 6. 세션에 SecurityContext 저장
+        HttpSession session = request.getSession(true);
+        session.setAttribute("SPRING_SECURITY_CONTEXT", context);
+
+        // 7. 로그인 성공 → 메인 페이지로 이동
+        return "redirect:/board/main";
     }
+
 
     @PostMapping("/logout")
     public String logoutUser(HttpSession session) {
